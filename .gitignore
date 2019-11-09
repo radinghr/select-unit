@@ -1,0 +1,7 @@
+local_manage.py
+select_unit/local_settings.py
+.idea/
+*__pycache__/
+db.sqlite3
+env/
+*.pyc
