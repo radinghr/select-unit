@@ -9,8 +9,8 @@ def bad_request_response(message="Bad request", status=False, code=400):
         'err_msg': message,
     }
     content = {
-        'data':data,
-        'StatusCode' : code,
+        'data': data,
+        'StatusCode': code,
     }
     return HttpResponse(json.dumps(content),
                         content_type="application/json",
@@ -23,8 +23,8 @@ def not_found_response(message="Not found", status=False, code=404):
         'err_msg': message,
     }
     content = {
-        'data':data,
-        'StatusCode' : code,
+        'data': data,
+        'StatusCode': code,
     }
     return HttpResponse(json.dumps(content),
                         content_type="application/json",
@@ -37,8 +37,8 @@ def un_auth_response(message="Authentication failed", status=False, code=403):
         'err_msg': message,
     }
     content = {
-        'data':data,
-        'StatusCode' : code,
+        'data': data,
+        'StatusCode': code,
     }
     return HttpResponse(json.dumps(content),
                         content_type="application/json",
@@ -49,11 +49,10 @@ def not_acceptable_response(message="Not Acceptable", status=False, code=406):
     data = {
         'success': status,
         'err_msg': message,
-        'err_code': code
     }
     content = {
-        'data':data,
-        'StatusCode' : code,
+        'data': data,
+        'StatusCode': code,
     }
     return HttpResponse(json.dumps(content),
                         content_type="application/json",

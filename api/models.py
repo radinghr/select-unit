@@ -5,8 +5,12 @@ from django.contrib.auth.models import AbstractUser
 class Major(models.Model):
     name = models.CharField(max_length=120)
 
+    def __str__(self):
+        return self.name
+
 
 class User(AbstractUser):
+    student_number = models.CharField(max_length=120, default=0)
     full_name = models.CharField(max_length=120, null=True)
     semester = models.IntegerField(default=1)
     major = models.ForeignKey(Major, null=True, on_delete=models.SET_NULL)

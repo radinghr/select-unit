@@ -6,8 +6,11 @@ app_name = 'api'
 
 urlpatterns = [
     # User urls
-    path('user/register/', views.RegisterUser.as_view(), name=views.RegisterUser.name),
+    path('user/', views.GenericUser.as_view(), name=views.GenericUser.name),
+    path('user/check/', views.CheckUserRegisterEmail.as_view(), name=views.CheckUserRegisterEmail.name),
     path('user/login/', views.LoginUser.as_view(), name=views.LoginUser.name),
+    path('user/password/', views.UserChangePassword.as_view(), name=views.UserChangePassword.name),
+
 
     # Major urls
     path('major/add/', views.AddMajor.as_view(), name=views.AddMajor.name),
