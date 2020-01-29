@@ -127,12 +127,16 @@ class UserChangePassword(GeneralClassMixin):
         if user:
             if user.is_normal_user and user.is_active:
                 login(request, user)
-                user_obj = User.objects.get(username=username)
-                user_obj.set_password(new_password)
-                user_obj.save()
-                user_token = create_jwt_token(user)
-                content = {'token': str(user_token)}
-                return success_response(content)
+                try:
+                    user_obj = User.objects.get(username=username)
+                    user_obj.set_password(new_password)
+                    user_obj.save()
+                    user_token = create_jwt_token(user)
+                    content = {'token': str(user_token)}
+                    return success_response(content)
+                except Exception as e:
+                    print(str(e))
+                    return error_response(utils.USER_NOT_FOUND)
         return un_auth_response(code=403)
 
 
