@@ -1,8 +1,9 @@
 from django.contrib.auth import authenticate, login
+from django.db.models import Q
 from django.forms.models import model_to_dict
 from rest_framework.authentication import get_authorization_header
 from . import utils
-from .models import User, Major
+from .models import User, Major, Course, StudentCourse
 from .serializer import ProfileSerializer, LoginSerializer, AddMajorSerializer
 from .http_response import bad_request_response, success_response, not_found_response, not_acceptable_response, \
     error_response, un_auth_response
@@ -195,6 +196,77 @@ class AddMajor(GeneralClassMixin):
         major_obj = Major.objects.create(name=major_name)
         data = model_to_dict(major_obj)
         return success_response({'object': data})
+
+
+class GenericCourse(GeneralClassMixin):
+    name = "Course"
+
+    def get(self, request):
+        username, err = get_token(request)
+        if err is not None:
+            return un_auth_response(message="Bad or missing token.")
+
+        query_params = ["name", "teacher_name", "exam_time", "exam_day", "daily_time", "day", "type", "semester"]
+        q_objects = Q()
+        for queue in query_params:
+            value = request.GET.get(queue)
+            if value is not None:
+                q_objects |= Q(**{queue: value})
+
+        try:
+            courses = Course.objects.filter(q_objects)
+        except Exception as e:
+            return bad_request_response()
+        data = list()
+        for obj in courses:
+            data.append(model_to_dict(obj))
+
+        return success_response(data=data)
+
+
+class UserCourse(GeneralClassMixin):
+    name = "UserCourse"
+
+    def get(self, request):
+        username, err = get_token(request)
+        if err is not None:
+            return un_auth_response(message="Bad or missing token.")
+        try:
+            user = User.objects.get(username=username)
+        except Exception as e:
+            return error_response(utils.USER_NOT_FOUND)
+
+        courses = StudentCourse.objects.filter(user_id=user.id)
+        student_courses = list()
+        q_objects = Q()
+        for crs in courses:
+            course_id = crs.course_id
+            q_objects |= Q(id=course_id)
+
+        course_obj = Course.objects.filter(q_objects)
+
+        for obj in course_obj:
+            student_courses.append(model_to_dict(obj))
+        return success_response(student_courses)
+
+    def post(self, request):
+        username, err = get_token(request)
+        if err is not None:
+            return un_auth_response(message="Bad or missing token.")
+        post_params = json.loads(request.body.decode('utf-8'))
+        # TODO Check course duplicate
+        course_id = post_params.get("course_id")
+        if course_id is None:
+            return bad_request_response(message="Request must contain course_id.", code=400)
+
+        try:
+            user = User.objects.get(username=username)
+        except Exception as e:
+            return error_response(utils.USER_NOT_FOUND)
+
+        new_course = StudentCourse.objects.create(course_id=course_id, user_id=user.id)
+        new_course.save()
+        return success_response({"message": "Course added succesfully"})
 
 
 class TokenTest(GeneralClassMixin):
