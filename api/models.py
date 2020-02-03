@@ -14,11 +14,12 @@ class Course(models.Model):
     teacher_name = models.CharField(max_length=120, default=None, null=True)
     exam_time = models.CharField(max_length=120, default=None, null=True)
     exam_day = models.CharField(max_length=120, default=None, null=True)
-    daily_time = models.CharField(max_length=120, default=None, null=True)
-    day = models.CharField(max_length=120, default=None, null=True)
+    class_times = models.CharField(max_length=350, default=None, null=True)
     major = models.ForeignKey(Major, null=True, on_delete=models.SET_NULL)
-    semester = models.IntegerField(default=1)
+    semester = models.IntegerField(default=0)
     type = models.IntegerField(default=0)
+    capacity = models.IntegerField(default=40)
+    register_id = models.CharField(max_length=120, default=None, null=True, unique=True)
 
     def __str__(self):
         return self.name

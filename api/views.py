@@ -25,14 +25,14 @@ class GenericUser(GeneralClassMixin):
         username = post_params.get("email")
         password = post_params.get("password")
         semester = int(post_params.get("semester", 1))
-        major_id = int(post_params.get("major", 0))
+        major_id = int(post_params.get("major_id", 0))
         full_name = post_params.get("full_name")
         student_number = post_params.get("student_number", 0)
 
         for i in [username, password, semester, major_id, full_name, student_number]:
             if i is None or i is 0:
                 return bad_request_response(
-                    message="Request must contain email, password, semester, major_id, full name and student number",
+                    message="Request must contain email, password, semester, major_id, full_name and student_number",
                     code=400)
 
         major_obj = Major.objects.filter(id=major_id)
@@ -43,7 +43,8 @@ class GenericUser(GeneralClassMixin):
                                            is_superuser=0, student_number=student_number)
                 user.set_password(password)
                 user.save()
-                content = {'messsage': 'User created successfully!'}
+                token = create_jwt_token(user)
+                content = {'token': str(token)}
                 return success_response(data=content)
             except Exception as e:
                 print(str(e))
@@ -59,7 +60,7 @@ class GenericUser(GeneralClassMixin):
         try:
             user_obj = User.objects.get(username=username)
             data = {
-                "username": user_obj.username,
+                "email": user_obj.username,
                 "full_name": user_obj.full_name,
                 "student_number": user_obj.student_number,
                 "semester": user_obj.semester,
@@ -72,20 +73,19 @@ class GenericUser(GeneralClassMixin):
 
     def put(self, request):
         username, err = get_token(request)
-        print(username)
         if err is not None:
             return un_auth_response(message="Bad or missing token.")
 
         post_params = json.loads(request.body.decode('utf-8'))
         semester = int(post_params.get("semester", 1))
-        major_id = int(post_params.get("major", 0))
+        major_id = int(post_params.get("major_id", 0))
         full_name = post_params.get("full_name")
         student_number = post_params.get("student_number", 0)
 
         for i in [semester, major_id, full_name, student_number]:
             if i is None or i is 0:
                 return bad_request_response(
-                    message="Request must contain semester, major_id, full name and student number",
+                    message="Request must contain semester, major_id, full_name and student_number",
                     code=400)
 
         major_obj = Major.objects.filter(id=major_id)
@@ -162,7 +162,7 @@ class LoginUser(GeneralClassMixin):
 
     def post(self, request):
         post_params = json.loads(request.body.decode('utf-8'))
-        username = post_params.get("username")
+        username = post_params.get("email")
         password = post_params.get("password")
         user = authenticate(username=username, password=password)
         if user:
@@ -206,7 +206,8 @@ class GenericCourse(GeneralClassMixin):
         if err is not None:
             return un_auth_response(message="Bad or missing token.")
 
-        query_params = ["name", "teacher_name", "exam_time", "exam_day", "daily_time", "day", "type", "semester"]
+        query_params = ["name", "teacher_name", "exam_time", "exam_day", "type", "semester",
+                        "capacity", "register_id"]
         q_objects = Q()
         for queue in query_params:
             value = request.GET.get(queue)
@@ -219,6 +220,7 @@ class GenericCourse(GeneralClassMixin):
             return bad_request_response()
         data = list()
         for obj in courses:
+            obj.class_times = json.loads(obj.class_times)
             data.append(model_to_dict(obj))
 
         return success_response(data=data)
@@ -246,6 +248,7 @@ class UserCourse(GeneralClassMixin):
         course_obj = Course.objects.filter(q_objects)
 
         for obj in course_obj:
+            obj.class_times = json.loads(obj.class_times)
             student_courses.append(model_to_dict(obj))
         return success_response(student_courses)
 
@@ -267,6 +270,25 @@ class UserCourse(GeneralClassMixin):
         new_course = StudentCourse.objects.create(course_id=course_id, user_id=user.id)
         new_course.save()
         return success_response({"message": "Course added succesfully"})
+
+    def delete(self, request):
+        username, err = get_token(request)
+        if err is not None:
+            return un_auth_response(message="Bad or missing token.")
+        post_params = json.loads(request.body.decode('utf-8'))
+        # TODO Check course duplicate
+        course_id = post_params.get("course_id")
+        if course_id is None:
+            return bad_request_response(message="Request must contain course_id.", code=400)
+
+        try:
+            user = User.objects.get(username=username)
+        except Exception as e:
+            return error_response(utils.USER_NOT_FOUND)
+
+        new_course = StudentCourse.objects.get(course_id=course_id, user_id=user.id)
+        new_course.delete()
+        return success_response({"message": "Course deleted succesfully"})
 
 
 class TokenTest(GeneralClassMixin):
