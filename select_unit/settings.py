@@ -12,10 +12,10 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 import datetime
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -27,8 +27,7 @@ SECRET_KEY = 'l7*mfqa#&aq%81#agzd*#_%6^!ak7gr*c8g@twe!y(0ubx%nbo'
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    '452dcb78.ngrok.io',
-    '127.0.0.1'
+    '127.0.0.1',
 ]
 
 
@@ -134,23 +133,7 @@ STATIC_URL = '/static/'
 # Django rest framework
 
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-    ],
-}
-
 AUTH_USER_MODEL = 'api.User'
-
-JWT_AUTH = {
-    'JWT_RESPONSE_PAYLOAD_HANDLER':
-        'rest_framework_jwt.utils.jwt_response_payload_handler',
-
-    'JWT_SECRET_KEY': SECRET_KEY,
-    'JWT_ALLOW_REFRESH': True,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=2),
-}
-
 
 CACHES = {
     "default": {
@@ -163,10 +146,18 @@ CACHES = {
 }
 
 CORS_ORIGIN_WHITELIST = (
-    'localhost:8000',
+    'http://localhost:8000',
     'http://localhost:3000',
-    'localhost'
+    'http://localhost'
 )
 
 
 CORS_ALLOW_CREDENTIALS = True
+
+APPEND_SLASH = True
+
+CORS_ALLOW_HEADERS = default_headers + (
+    'Access-Control-Allow-Origin',
+    'HTTP_TOKEN',
+    'token'
+)
