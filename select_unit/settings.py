@@ -21,13 +21,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'l7*mfqa#&aq%81#agzd*#_%6^!ak7gr*c8g@twe!y(0ubx%nbo'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
+    '0.0.0.0',
+    '127.0.0.1',
+    'select-unit.herokuapp.com/'
 ]
 
 
@@ -79,17 +84,11 @@ WSGI_APPLICATION = 'select_unit.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'khu_select_unit',
-        'USER': 'admin',
-        'PASSWORD': 'admin123',
-        'HOST': '127.0.0.1',
-        'PORT': 5432,
-    }
-}
+import dj_database_url
+DATABASES = {}
 
+db_from_env = dj_database_url.config(conn_max_age=600)
+DATABASES['default'].update(db_from_env)
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
