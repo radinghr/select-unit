@@ -11,6 +11,7 @@ urlpatterns = [
     path('user/login/', views.LoginUser.as_view(), name=views.LoginUser.name),
     path('user/password/', views.UserChangePassword.as_view(), name=views.UserChangePassword.name),
     path('user/course/', views.UserCourse.as_view(), name=views.UserCourse.name),
+    path('user/course/delete/', views.UserCourseDelete.as_view(), name=views.UserCourseDelete.name),
 
 
     # Major urls

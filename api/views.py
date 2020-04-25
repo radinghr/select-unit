@@ -54,6 +54,7 @@ class GenericUser(GeneralClassMixin):
 
     def get(self, request):
         username, err = get_token(request)
+        print(username, err)
         if err is not None:
             print(err)
             return un_auth_response(message="Bad or missing token.")
@@ -237,16 +238,15 @@ class UserCourse(GeneralClassMixin):
             user = User.objects.get(username=username)
         except Exception as e:
             return error_response(utils.USER_NOT_FOUND)
-
         courses = StudentCourse.objects.filter(user_id=user.id)
         student_courses = list()
+        if len(courses) == 0:
+            return success_response(student_courses)
         q_objects = Q()
         for crs in courses:
             course_id = crs.course_id
-            q_objects |= Q(id=course_id)
-
+            q_objects |= Q(register_id=course_id)
         course_obj = Course.objects.filter(q_objects)
-
         for obj in course_obj:
             obj.class_times = json.loads(obj.class_times)
             student_courses.append(model_to_dict(obj))
@@ -258,28 +258,33 @@ class UserCourse(GeneralClassMixin):
             return un_auth_response(message="Bad or missing token.")
         post_params = json.loads(request.body.decode('utf-8'))
         # TODO Check course duplicate
-        course_id = post_params.get("course_id")
+        course_id = post_params.get("register_id")
         if course_id is None:
-            return bad_request_response(message="Request must contain course_id.", code=400)
+            return bad_request_response(message="Request must contain register_id.", code=400)
 
         try:
             user = User.objects.get(username=username)
         except Exception as e:
             return error_response(utils.USER_NOT_FOUND)
+        if len(StudentCourse.objects.filter(course_id=course_id, user_id=user.id)):
+            return bad_request_response("This course already exists")
 
         new_course = StudentCourse.objects.create(course_id=course_id, user_id=user.id)
         new_course.save()
         return success_response({"message": "Course added succesfully"})
 
-    def delete(self, request):
+
+class UserCourseDelete(GeneralClassMixin):
+    name = "UserCourseDelete"
+
+    def post(self, request):
         username, err = get_token(request)
         if err is not None:
             return un_auth_response(message="Bad or missing token.")
         post_params = json.loads(request.body.decode('utf-8'))
-        # TODO Check course duplicate
-        course_id = post_params.get("course_id")
+        course_id = post_params.get("register_id")
         if course_id is None:
-            return bad_request_response(message="Request must contain course_id.", code=400)
+            return bad_request_response(message="Request must contain register_id.", code=400)
 
         try:
             user = User.objects.get(username=username)
@@ -288,6 +293,7 @@ class UserCourse(GeneralClassMixin):
 
         new_course = StudentCourse.objects.get(course_id=course_id, user_id=user.id)
         new_course.delete()
+
         return success_response({"message": "Course deleted succesfully"})
 
 
